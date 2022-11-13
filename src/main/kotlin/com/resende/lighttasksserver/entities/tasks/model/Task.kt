@@ -19,7 +19,7 @@ class Task(
     val name: String?,
 
     @NotBlank
-    val instructions: String?,
+    val description: String?,
 
     @NotBlank
     val created_at: String?,
@@ -42,7 +42,7 @@ class Task(
         other as Task
 
         return name == other.name
-                && instructions == other.instructions
+                && description == other.description
                 && created_at == other.created_at
                 && deadline == other.deadline
                 && responsible == other.responsible
@@ -53,7 +53,7 @@ class Task(
     fun copy(
         id: Long = this.id,
         name: String? = this.name,
-        instructions: String? = this.instructions,
+        instructions: String? = this.description,
         createdAt: String? = this.created_at,
         deadline: String? = this.deadline,
         responsible: BasicUser? = this.responsible,
@@ -61,7 +61,7 @@ class Task(
     ) = Task(
         id = id,
         name = name,
-        instructions = instructions,
+        description = instructions,
         created_at = createdAt,
         deadline = deadline,
         responsible = responsible,

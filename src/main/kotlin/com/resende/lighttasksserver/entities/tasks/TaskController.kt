@@ -24,12 +24,16 @@ class TaskController {
     val teamsRepository: TeamRepository? = null
 
     @GetMapping
-    fun getTasks() = taskRepository?.findAll() ?: emptyList()
+    fun getTasks(): List<TaskDTO> {
+        val tasks = taskRepository?.findAll() ?: emptyList()
+        return tasks.map { entityToDTO(it) }
+    }
 
     @GetMapping("/{id}")
-    fun getTasksByUser(@PathVariable id: Long): List<Task> = taskRepository?.findAll()?.toList()?.filter { task ->
-        task.responsible?.id == id
-    } ?: emptyList()
+    fun getTasksByUser(@PathVariable id: Long): List<TaskDTO> {
+        val tasks = basicUserRepository?.findById(id)?.get()?.tasks ?: emptyList()
+        return tasks.map { entityToDTO(it) }
+    }
 
     @PostMapping
     fun registerTask(@RequestBody newTask: @Valid Task?): Status {
@@ -47,14 +51,13 @@ class TaskController {
     fun updateTask(@RequestBody newTask: @Valid Task?): Status {
         if (newTask?.responsible?.id == null) return Status.FAILURE
         val responsible = basicUserRepository?.findById(newTask.responsible.id)?.get()
-        val task = taskRepository?.findAll()?.toList()?.find { it.id == newTask.id }
-            ?: return Status.FAILURE
+        val task = taskRepository?.findById(newTask.id)?.get() ?: return Status.FAILURE
         taskRepository?.save(
             task.copy(
                 responsible = responsible,
                 name = newTask.name,
                 deadline = newTask.deadline,
-                instructions = newTask.instructions,
+                instructions = newTask.description,
                 team = newTask.team
             )
         )
@@ -79,7 +82,7 @@ class TaskController {
                 TaskDTO(
                     id = id,
                     name = name,
-                    instructions = instructions,
+                    description = description,
                     created_at = created_at,
                     deadline = deadline,
                     team_id = team?.id,

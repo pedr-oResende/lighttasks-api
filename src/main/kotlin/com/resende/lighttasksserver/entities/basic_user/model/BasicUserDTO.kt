@@ -4,8 +4,8 @@ import com.resende.lighttasksserver.entities.tasks.model.TaskDTO
 import com.resende.lighttasksserver.entities.teams.model.TeamDTO
 
 data class BasicUserDTO(
-    val id: Long = 0L,
-    val username: String? = "",
-    val tasks: Set<TaskDTO>? = setOf(),
-    val teams: Set<TeamDTO>? = setOf()
+    val id: Long,
+    val username: String?,
+    val tasks: Set<TaskDTO>?,
+    val teams: Set<TeamDTO>?
 )
