@@ -63,8 +63,4 @@ class Team(
         leader_id = leaderId,
         tasks = tasks
     )
-
-    override fun toString(): String {
-        return "Team(id=$id, name=$name, members=$members, tasks=$tasks, createdAt=$created_at, leaderId=$leader_id)"
-    }
 }
