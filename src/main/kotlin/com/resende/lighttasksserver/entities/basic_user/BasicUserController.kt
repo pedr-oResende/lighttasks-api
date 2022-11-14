@@ -2,7 +2,6 @@ package com.resende.lighttasksserver.entities.basic_user
 
 import com.resende.lighttasksserver.entities.basic_user.model.BasicUser
 import com.resende.lighttasksserver.entities.basic_user.model.BasicUserDTO
-import com.resende.lighttasksserver.entities.basic_user.model.BasicUserResponse
 import com.resende.lighttasksserver.entities.tasks.TaskController
 import com.resende.lighttasksserver.entities.teams.TeamController
 import com.resende.lighttasksserver.model.Status
@@ -16,6 +15,9 @@ class BasicUserController {
 
     @Autowired
     val basicUserRepository: BasicUserRepository? = null
+
+    @Autowired
+    val teamController: TeamController? = null
 
     @GetMapping
     fun getBasicUsers(): List<BasicUserDTO>? {
@@ -33,9 +35,8 @@ class BasicUserController {
 
     @PutMapping
     fun editBasicUser(@RequestBody newUser: @Valid BasicUser?): Status? {
-        if (newUser == null) return Status.FAILURE
-        val user =
-            basicUserRepository?.findAll()?.toList()?.first { it.username == newUser.username } ?: return Status.FAILURE
+        if (newUser?.id == null) return Status.FAILURE
+        val user = basicUserRepository?.findById(newUser.id)?.get() ?: return Status.FAILURE
         basicUserRepository?.save(
             user.copy(
                 username = newUser.username,
@@ -43,6 +44,15 @@ class BasicUserController {
                 teams = newUser.teams
             )
         )
+        return Status.SUCCESS
+    }
+
+    @PutMapping("{newMemberId}/add_to_team/{teamId}")
+    fun addMember(@PathVariable newMemberId: Long?, @PathVariable teamId: Long): Status? {
+        if (newMemberId == null) return Status.FAILURE
+        val member = basicUserRepository?.findById(newMemberId)?.get() ?: return Status.FAILURE
+        val team = teamController?.teamRepository?.findById(teamId)?.get() ?: return Status.FAILURE
+        editBasicUser(member.copy(teams = member.teams?.plus(team)))
         return Status.SUCCESS
     }
 
@@ -62,7 +72,7 @@ class BasicUserController {
                     id = id,
                     username = username,
                     tasks = tasks?.map { TaskController.entityToDTO(it) }?.toSet(),
-                    teams = teams?.map { TeamController.entityToDTO(it) }?.toSet()
+                    teams_id = teams?.map { it.id }?.toSet()
                 )
             }
     }

@@ -53,13 +53,15 @@ class TaskController {
         val responsible = basicUserRepository?.findById(newTask.responsible.id)?.get()
         val task = taskRepository?.findById(newTask.id)?.get() ?: return Status.FAILURE
         taskRepository?.save(
-            task.copy(
-                responsible = responsible,
-                name = newTask.name,
-                deadline = newTask.deadline,
-                instructions = newTask.description,
-                team = newTask.team
-            )
+            with(newTask) {
+                task.copy(
+                    responsible = responsible,
+                    name = name,
+                    deadline = deadline,
+                    instructions = description,
+                    team = team
+                )
+            }
         )
         return Status.SUCCESS
     }

@@ -7,5 +7,5 @@ data class BasicUserDTO(
     val id: Long,
     val username: String?,
     val tasks: Set<TaskDTO>?,
-    val teams: Set<TeamDTO>?
+    val teams_id: Set<Long>?
 )

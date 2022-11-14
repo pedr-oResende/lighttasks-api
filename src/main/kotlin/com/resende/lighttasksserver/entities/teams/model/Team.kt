@@ -13,7 +13,7 @@ class Team(
     @Id
     @GeneratedValue(generator = "increment")
     @GenericGenerator(name = "increment", strategy = "increment")
-    val id: Long?,
+    val id: Long,
 
     @NotBlank
     val name: String?,
@@ -49,7 +49,7 @@ class Team(
     override fun hashCode(): Int = javaClass.hashCode()
 
     fun copy(
-        id: Long? = this.id,
+        id: Long = this.id,
         name: String? = this.name,
         members: Set<BasicUser>? = this.members,
         createdAt: String? = this.created_at,
