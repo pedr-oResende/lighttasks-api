@@ -2,13 +2,13 @@ package com.resende.lighttasksserver.entities.teams
 
 import com.resende.lighttasksserver.entities.basic_user.BasicUserController
 import com.resende.lighttasksserver.entities.basic_user.BasicUserRepository
-import com.resende.lighttasksserver.entities.tasks.TaskController
+import com.resende.lighttasksserver.entities.basic_user.model.BasicUser
 import com.resende.lighttasksserver.entities.teams.model.Team
 import com.resende.lighttasksserver.entities.teams.model.TeamDTO
-import com.resende.lighttasksserver.entities.teams.model.TeamResponse
-import com.resende.lighttasksserver.model.Status
 import com.resende.lighttasksserver.utils.DateTimeUtils
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import javax.validation.Valid
 
@@ -23,59 +23,71 @@ class TeamController {
     val basicUserRepository: BasicUserRepository? = null
 
     @GetMapping
-    fun getTeams(): List<TeamDTO> {
+    fun getTeams(): ResponseEntity<List<TeamDTO>> {
         val teams = teamRepository?.findAll() ?: emptyList()
-        return teams.map { entityToDTO(it) }
+        return ResponseEntity(teams.map { entityToDTO(it) }, HttpStatus.OK)
     }
-    @GetMapping("/{id}")
-    fun getTeamsByUser(@PathVariable id: Long): List<TeamDTO> {
-        val teams = basicUserRepository?.findById(id)?.get()?.teams ?: emptyList()
-        return teams.map { entityToDTO(it) }
+
+    @GetMapping("/{teamId}")
+    fun getTeamsById(@PathVariable teamId: Long): ResponseEntity<TeamDTO> {
+        val team = teamRepository?.findById(teamId)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        return ResponseEntity(entityToDTO(team), HttpStatus.OK)
+    }
+
+    @GetMapping("/{userId}")
+    fun getTeamsByUser(@PathVariable userId: Long): ResponseEntity<List<TeamDTO>> {
+        val teams = basicUserRepository?.findById(userId)?.get()?.teams ?: emptyList()
+        return ResponseEntity(teams.map { entityToDTO(it) }, HttpStatus.OK)
     }
 
     @PostMapping
-    fun registerTeams(@RequestBody newTeam: @Valid Team?): Status? {
+    fun registerTeams(@RequestBody newTeam: @Valid Team?): ResponseEntity<TeamDTO> {
         if (newTeam?.members?.map { it.id }
-                ?.contains(newTeam.leader_id) == false || newTeam?.leader_id == null) return Status.FAILURE
+                ?.contains(newTeam.leader_id) == false || newTeam?.leader_id == null) return ResponseEntity(
+            null,
+            HttpStatus.NOT_FOUND
+        )
         val members = newTeam.members?.map { basicUser ->
-            basicUserRepository?.findById(basicUser.id)?.get() ?: return Status.FAILURE
+            basicUserRepository?.findById(basicUser.id)?.get() ?: return ResponseEntity(
+                null,
+                HttpStatus.NOT_FOUND
+            )
         }?.toSet()
         val team = newTeam.copy(
             createdAt = DateTimeUtils.getDate(),
             members = members
         )
+        createTeam(team, members)
+        return ResponseEntity(entityToDTO(team), HttpStatus.OK)
+    }
+
+    private fun createTeam(team: Team, members: Set<BasicUser>?) {
         teamRepository?.save(team)
-        return Status.SUCCESS
+        members?.forEach { member ->
+            basicUserRepository?.save(member.copy(teams = member.teams?.plus(team)))
+        }
     }
 
     @PutMapping
-    fun editTeam(@RequestBody newTeam: @Valid Team?): TeamResponse? {
-        if (newTeam?.id == null) return TeamResponse(
-            team = null,
-            status = Status.FAILURE
-        )
-        val team = teamRepository?.findById(newTeam.id)?.get() ?: return TeamResponse(
-            team = null,
-            status = Status.FAILURE
-        )
-        teamRepository?.save(
-            with(newTeam) {
-                team.copy(
-                    name = name,
-                    leaderId = leader_id
-                )
-            }
-        )
-        return TeamResponse(
-            team = newTeam,
-            status = Status.SUCCESS
-        )
+    fun editTeam(@RequestBody newTeam: @Valid Team?): ResponseEntity<TeamDTO> {
+        if (newTeam?.id == null) return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        val team = teamRepository?.findById(newTeam.id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        if (newTeam.members?.map { it.id }?.contains(newTeam.leader_id) == false)
+            return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        val editedTeam = with(newTeam) {
+            team.copy(
+                name = name,
+                leader_id = leader_id
+            )
+        }
+        teamRepository?.save(editedTeam)
+        return ResponseEntity(entityToDTO(editedTeam), HttpStatus.OK)
     }
 
-    @DeleteMapping("/remove/{id}")
-    fun deleteTeam(@PathVariable id: Long): Status? {
+    @DeleteMapping("/{id}")
+    fun deleteTeam(@PathVariable id: Long): HttpStatus {
         teamRepository?.deleteById(id)
-        return Status.SUCCESS
+        return HttpStatus.OK
     }
 
     companion object {
@@ -86,10 +98,9 @@ class TeamController {
                     name = name,
                     created_at = created_at,
                     leader_id = leader_id,
-                    tasks = tasks?.map { TaskController.entityToDTO(it) }?.toSet(),
-                    members = members?.map {  basicUser ->
+                    members = members?.map { basicUser ->
                         val tasks = basicUser.tasks?.toMutableSet()
-                        tasks?.removeIf { it.team?.id != id }
+                        tasks?.removeIf { it.team_id != id }
                         BasicUserController.entityToDTO(basicUser.copy(tasks = tasks))
                     }?.toSet()
                 )

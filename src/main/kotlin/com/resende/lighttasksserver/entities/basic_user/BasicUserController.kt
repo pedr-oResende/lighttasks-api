@@ -4,8 +4,11 @@ import com.resende.lighttasksserver.entities.basic_user.model.BasicUser
 import com.resende.lighttasksserver.entities.basic_user.model.BasicUserDTO
 import com.resende.lighttasksserver.entities.tasks.TaskController
 import com.resende.lighttasksserver.entities.teams.TeamController
+import com.resende.lighttasksserver.entities.teams.TeamRepository
 import com.resende.lighttasksserver.model.Status
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import javax.validation.Valid
 
@@ -17,52 +20,50 @@ class BasicUserController {
     val basicUserRepository: BasicUserRepository? = null
 
     @Autowired
-    val teamController: TeamController? = null
+    val teamRepository: TeamRepository? = null
 
     @GetMapping
-    fun getBasicUsers(): List<BasicUserDTO>? {
+    fun getBasicUsers(): ResponseEntity<List<BasicUserDTO>?> {
         val users = basicUserRepository?.findAll() ?: emptyList()
-        return users.map { basicUser ->
-            entityToDTO(basicUser)
-        }
+        return ResponseEntity(
+            users.map { basicUser ->
+                entityToDTO(basicUser)
+            },
+            HttpStatus.OK
+        )
     }
 
     @GetMapping("/{id}")
-    fun getBasicUserById(@PathVariable id: Long): BasicUserDTO? {
-        val user = basicUserRepository?.findById(id)?.get() ?: return null
-        return entityToDTO(user)
+    fun getBasicUserById(@PathVariable id: Long): ResponseEntity<BasicUserDTO?> {
+        val user = basicUserRepository?.findById(id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        return ResponseEntity(entityToDTO(user), HttpStatus.OK)
     }
 
     @PutMapping
-    fun editBasicUser(@RequestBody newUser: @Valid BasicUser?): Status? {
-        if (newUser?.id == null) return Status.FAILURE
-        val user = basicUserRepository?.findById(newUser.id)?.get() ?: return Status.FAILURE
-        basicUserRepository?.save(
-            user.copy(
-                username = newUser.username,
-                tasks = newUser.tasks,
-                teams = newUser.teams
-            )
-        )
-        return Status.SUCCESS
+    fun editBasicUser(@RequestBody newUser: @Valid BasicUser?): ResponseEntity<BasicUserDTO?> {
+        if (newUser?.id == null) return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        val user = basicUserRepository?.findById(newUser.id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        val editedUser = user.copy(username = newUser.username)
+        basicUserRepository?.save(editedUser)
+        return ResponseEntity(entityToDTO(editedUser), HttpStatus.OK)
     }
 
     @PutMapping("{newMemberId}/add_to_team/{teamId}")
-    fun addMember(@PathVariable newMemberId: Long?, @PathVariable teamId: Long): Status? {
-        if (newMemberId == null) return Status.FAILURE
-        val member = basicUserRepository?.findById(newMemberId)?.get() ?: return Status.FAILURE
-        val team = teamController?.teamRepository?.findById(teamId)?.get() ?: return Status.FAILURE
+    fun addMember(@PathVariable newMemberId: Long?, @PathVariable teamId: Long): HttpStatus {
+        if (newMemberId == null) return HttpStatus.NOT_FOUND
+        val member = basicUserRepository?.findById(newMemberId)?.get() ?: return HttpStatus.NOT_FOUND
+        val team = teamRepository?.findById(teamId)?.get() ?: return HttpStatus.NOT_FOUND
         editBasicUser(member.copy(teams = member.teams?.plus(team)))
-        return Status.SUCCESS
+        return HttpStatus.OK
     }
 
-    @DeleteMapping("/remove/{id}")
-    fun deleteBasicUser(@PathVariable id: Long): Status? {
-        if (basicUserRepository?.findAll()?.toList()?.map { it.id }?.contains(id) == true) {
-            return Status.FAILURE
-        }
-        basicUserRepository?.deleteById(id)
-        return Status.SUCCESS
+    @PutMapping("{newMemberId}/remove_of_team/{teamId}")
+    fun removeMember(@PathVariable newMemberId: Long?, @PathVariable teamId: Long): HttpStatus {
+        if (newMemberId == null) return HttpStatus.NOT_FOUND
+        val member = basicUserRepository?.findById(newMemberId)?.get() ?: return HttpStatus.NOT_FOUND
+        val team = teamRepository?.findById(teamId)?.get() ?: return HttpStatus.NOT_FOUND
+        editBasicUser(member.copy(teams = member.teams?.minus(team)))
+        return HttpStatus.OK
     }
 
     companion object {

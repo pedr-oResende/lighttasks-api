@@ -1,7 +1,6 @@
 package com.resende.lighttasksserver.entities.teams.model
 
 import com.resende.lighttasksserver.entities.basic_user.model.BasicUser
-import com.resende.lighttasksserver.entities.tasks.model.Task
 import org.hibernate.Hibernate
 import org.hibernate.annotations.GenericGenerator
 import javax.persistence.*
@@ -25,9 +24,6 @@ class Team(
         inverseJoinColumns = [JoinColumn(name = "basic_users_fk")]
     )
     val members: Set<BasicUser>?,
-
-    @OneToMany
-    val tasks: Set<Task>?,
 
     @NotBlank
     val created_at: String?,
@@ -53,14 +49,12 @@ class Team(
         name: String? = this.name,
         members: Set<BasicUser>? = this.members,
         createdAt: String? = this.created_at,
-        leaderId: Long? = this.leader_id,
-        tasks: Set<Task>? = this.tasks
+        leader_id: Long? = this.leader_id
     ) = Team(
         id = id,
         name = name,
         members = members,
         created_at = createdAt,
-        leader_id = leaderId,
-        tasks = tasks
+        leader_id = leader_id
     )
 }

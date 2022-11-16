@@ -1,7 +1,6 @@
 package com.resende.lighttasksserver.entities.tasks.model
 
 import com.resende.lighttasksserver.entities.basic_user.model.BasicUser
-import com.resende.lighttasksserver.entities.teams.model.Team
 import org.hibernate.Hibernate
 import org.hibernate.annotations.GenericGenerator
 import javax.persistence.*
@@ -33,8 +32,10 @@ class Task(
     val responsible: BasicUser?,
 
     @NotBlank
-    @ManyToOne
-    val team: Team?
+    val team_id: Long?,
+
+    @NotBlank
+    val is_done: Boolean?
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -46,6 +47,7 @@ class Task(
                 && created_at == other.created_at
                 && deadline == other.deadline
                 && responsible == other.responsible
+                && is_done == other.is_done
     }
 
     override fun hashCode(): Int = javaClass.hashCode()
@@ -53,18 +55,20 @@ class Task(
     fun copy(
         id: Long = this.id,
         name: String? = this.name,
-        instructions: String? = this.description,
+        description: String? = this.description,
         createdAt: String? = this.created_at,
         deadline: String? = this.deadline,
         responsible: BasicUser? = this.responsible,
-        team: Team? = this.team
+        team_id: Long? = this.team_id,
+        is_done: Boolean? = this.is_done
     ) = Task(
         id = id,
         name = name,
-        description = instructions,
+        description = description,
         created_at = createdAt,
         deadline = deadline,
         responsible = responsible,
-        team = team
+        team_id = team_id,
+        is_done = is_done
     )
 }

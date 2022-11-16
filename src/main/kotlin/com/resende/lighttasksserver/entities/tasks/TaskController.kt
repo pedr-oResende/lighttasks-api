@@ -3,10 +3,10 @@ package com.resende.lighttasksserver.entities.tasks
 import com.resende.lighttasksserver.entities.basic_user.BasicUserRepository
 import com.resende.lighttasksserver.entities.tasks.model.Task
 import com.resende.lighttasksserver.entities.tasks.model.TaskDTO
-import com.resende.lighttasksserver.entities.teams.TeamRepository
-import com.resende.lighttasksserver.model.Status
 import com.resende.lighttasksserver.utils.DateTimeUtils
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import javax.validation.Valid
 
@@ -20,62 +20,71 @@ class TaskController {
     @Autowired
     val basicUserRepository: BasicUserRepository? = null
 
-    @Autowired
-    val teamsRepository: TeamRepository? = null
-
     @GetMapping
-    fun getTasks(): List<TaskDTO> {
+    fun getTasks(): ResponseEntity<List<TaskDTO>> {
         val tasks = taskRepository?.findAll() ?: emptyList()
-        return tasks.map { entityToDTO(it) }
+        return ResponseEntity(tasks.map { entityToDTO(it) }, HttpStatus.OK)
     }
 
     @GetMapping("/{id}")
-    fun getTasksByUser(@PathVariable id: Long): List<TaskDTO> {
+    fun getTasksByUser(@PathVariable id: Long): ResponseEntity<List<TaskDTO>> {
         val tasks = basicUserRepository?.findById(id)?.get()?.tasks ?: emptyList()
-        return tasks.map { entityToDTO(it) }
+        return ResponseEntity(tasks.map { entityToDTO(it) }, HttpStatus.OK)
     }
 
     @PostMapping
-    fun registerTask(@RequestBody newTask: @Valid Task?): Status {
-        if (newTask?.responsible?.id == null) return Status.FAILURE
-        val responsible = basicUserRepository?.findById(newTask.responsible.id)?.get() ?: return Status.FAILURE
-        val task = newTask.copy(
-            createdAt = DateTimeUtils.getDate(),
-            responsible = responsible
-        )
+    fun registerTask(@RequestBody newTask: @Valid TaskDTO?): ResponseEntity<TaskDTO> {
+        if (newTask?.responsible_id == null) return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        val responsible = basicUserRepository?.findById(newTask.responsible_id)?.get()
+            ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        val task = with(newTask) {
+            Task(
+                id = id,
+                name = name,
+                deadline = deadline,
+                description = description,
+                created_at = DateTimeUtils.getDate(),
+                responsible = responsible,
+                team_id = team_id,
+                is_done = false
+            )
+        }
         taskRepository?.save(task)
-        return Status.SUCCESS
+        return ResponseEntity(entityToDTO(task), HttpStatus.OK)
     }
 
     @PutMapping
-    fun updateTask(@RequestBody newTask: @Valid Task?): Status {
-        if (newTask?.responsible?.id == null) return Status.FAILURE
-        val responsible = basicUserRepository?.findById(newTask.responsible.id)?.get()
-        val task = taskRepository?.findById(newTask.id)?.get() ?: return Status.FAILURE
-        taskRepository?.save(
-            with(newTask) {
-                task.copy(
-                    responsible = responsible,
-                    name = name,
-                    deadline = deadline,
-                    instructions = description,
-                    team = team
-                )
-            }
-        )
-        return Status.SUCCESS
+    fun updateTask(@RequestBody newTask: @Valid TaskDTO?): ResponseEntity<TaskDTO> {
+        if (newTask?.responsible_id == null || newTask.team_id == null) return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        val responsible = basicUserRepository?.findById(newTask.responsible_id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        val task = taskRepository?.findById(newTask.id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
+
+        val editedTask = with(newTask) {
+            Task(
+                id = id,
+                responsible = responsible,
+                name = name,
+                deadline = deadline,
+                description = description,
+                is_done = is_done,
+                created_at = task.created_at,
+                team_id = team_id
+            )
+        }
+        taskRepository?.save(editedTask)
+        return ResponseEntity(entityToDTO(editedTask), HttpStatus.OK)
     }
 
     @DeleteMapping("{id}")
-    fun deleteTask(@PathVariable id: Long): Status? {
+    fun deleteTask(@PathVariable id: Long): HttpStatus {
         taskRepository?.deleteById(id)
-        return Status.SUCCESS
+        return HttpStatus.OK
     }
 
     @DeleteMapping("/delete_all")
-    fun deleteAllTasks(): Status? {
+    fun deleteAllTasks(): HttpStatus {
         taskRepository?.deleteAll()
-        return Status.SUCCESS
+        return HttpStatus.OK
     }
 
     companion object {
@@ -87,8 +96,9 @@ class TaskController {
                     description = description,
                     created_at = created_at,
                     deadline = deadline,
-                    team_id = team?.id,
-                    responsible_id = responsible?.id
+                    team_id = team_id,
+                    responsible_id = responsible?.id,
+                    is_done = is_done
                 )
             }
     }

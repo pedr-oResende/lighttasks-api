@@ -18,7 +18,7 @@ class User(
     val id: Long,
     @NotBlank val username: String,
     @NotBlank val password: String,
-    @NotBlank val loggedIn: Boolean
+    @NotBlank val logged_in: Boolean
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -34,15 +34,15 @@ class User(
         id: Long = this.id,
         username: String = this.username,
         password: String = this.password,
-        loggedIn: Boolean = this.loggedIn
+        loggedIn: Boolean = this.logged_in
     ) = User(
         id = id,
         username = username,
         password = password,
-        loggedIn = loggedIn
+        logged_in = loggedIn
     )
 
     override fun toString(): String {
-        return this::class.simpleName + "(id = $id , username = $username , password = $password , loggedIn = $loggedIn )"
+        return this::class.simpleName + "(id = $id , username = $username , password = $password , loggedIn = $logged_in )"
     }
 }
