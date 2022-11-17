@@ -26,10 +26,16 @@ class TaskController {
         return ResponseEntity(tasks.map { entityToDTO(it) }, HttpStatus.OK)
     }
 
-    @GetMapping("/{id}")
-    fun getTasksByUser(@PathVariable id: Long): ResponseEntity<List<TaskDTO>> {
-        val tasks = basicUserRepository?.findById(id)?.get()?.tasks ?: emptyList()
+    @GetMapping("/{userId}")
+    fun getTasksByUser(@PathVariable userId: Long): ResponseEntity<List<TaskDTO>> {
+        val tasks = basicUserRepository?.findById(userId)?.get()?.tasks ?: emptyList()
         return ResponseEntity(tasks.map { entityToDTO(it) }, HttpStatus.OK)
+    }
+
+    @GetMapping("/{id}")
+    fun getTaskById(@PathVariable id: Long): ResponseEntity<TaskDTO> {
+        val task = taskRepository?.findById(id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        return ResponseEntity(entityToDTO(task), HttpStatus.OK)
     }
 
     @PostMapping
@@ -53,15 +59,15 @@ class TaskController {
         return ResponseEntity(entityToDTO(task), HttpStatus.OK)
     }
 
-    @PutMapping
-    fun updateTask(@RequestBody newTask: @Valid TaskDTO?): ResponseEntity<TaskDTO> {
+    @PutMapping("/{id}")
+    fun updateTask(@PathVariable("id") id: Long, @RequestBody newTask: @Valid TaskDTO?): ResponseEntity<TaskDTO> {
         if (newTask?.responsible_id == null || newTask.team_id == null) return ResponseEntity(null, HttpStatus.NOT_FOUND)
         val responsible = basicUserRepository?.findById(newTask.responsible_id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
-        val task = taskRepository?.findById(newTask.id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        val task = taskRepository?.findById(id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
 
         val editedTask = with(newTask) {
             Task(
-                id = id,
+                id = task.id,
                 responsible = responsible,
                 name = name,
                 deadline = deadline,

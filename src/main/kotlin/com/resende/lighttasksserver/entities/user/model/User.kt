@@ -16,9 +16,9 @@ class User(
     @GeneratedValue(generator = "increment")
     @GenericGenerator(name = "increment", strategy = "increment")
     val id: Long,
-    @NotBlank val username: String,
-    @NotBlank val password: String,
-    @NotBlank val logged_in: Boolean
+    @NotBlank val username: String?,
+    @NotBlank val password: String?,
+    @NotBlank val logged_in: Boolean?
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -32,9 +32,9 @@ class User(
 
     fun copy(
         id: Long = this.id,
-        username: String = this.username,
-        password: String = this.password,
-        loggedIn: Boolean = this.logged_in
+        username: String? = this.username,
+        password: String? = this.password,
+        loggedIn: Boolean? = this.logged_in
     ) = User(
         id = id,
         username = username,

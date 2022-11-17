@@ -68,10 +68,10 @@ class TeamController {
         }
     }
 
-    @PutMapping
-    fun editTeam(@RequestBody newTeam: @Valid Team?): ResponseEntity<TeamDTO> {
-        if (newTeam?.id == null) return ResponseEntity(null, HttpStatus.NOT_FOUND)
-        val team = teamRepository?.findById(newTeam.id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
+    @PutMapping("/{id}")
+    fun editTeam(@PathVariable("id") id: Long, @RequestBody newTeam: @Valid Team?): ResponseEntity<TeamDTO> {
+        if (newTeam == null) return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        val team = teamRepository?.findById(id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
         if (newTeam.members?.map { it.id }?.contains(newTeam.leader_id) == false)
             return ResponseEntity(null, HttpStatus.NOT_FOUND)
         val editedTeam = with(newTeam) {

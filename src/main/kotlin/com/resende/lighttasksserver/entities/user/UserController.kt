@@ -50,22 +50,21 @@ class UserController {
         return HttpStatus.OK
     }
 
-    @PutMapping
-    fun editUser(@RequestBody newUser: @Valid User?): HttpStatus {
-        if (newUser?.id == null) return HttpStatus.NOT_FOUND
+    @PutMapping("/{id}")
+    fun editUser(@PathVariable("id") id: Long?, @RequestBody newUser: @Valid User?): HttpStatus {
+        if (id == null) return HttpStatus.NOT_FOUND
         val user =
-            userRepository?.findById(newUser.id)?.get() ?: return HttpStatus.NOT_FOUND
-        val basicUser = basicUserRepository?.findById(newUser.id)?.get() ?: return HttpStatus.NOT_FOUND
+            userRepository?.findById(id)?.get() ?: return HttpStatus.NOT_FOUND
+        val basicUser = basicUserRepository?.findById(id)?.get() ?: return HttpStatus.NOT_FOUND
         basicUserRepository?.save(
             basicUser.copy(
-                username = newUser.username
+                username = newUser?.username
             )
         )
         userRepository?.save(
             user.copy(
-                username = newUser.username,
-                password = newUser.password,
-                loggedIn = newUser.logged_in
+                username = newUser?.username,
+                password = newUser?.password
             )
         )
         return HttpStatus.OK
@@ -75,7 +74,7 @@ class UserController {
     fun loginUser(@RequestBody user: @Valid User?): ResponseEntity<BasicUserDTO>? {
         val users = userRepository?.findAll() ?: emptyList()
         return if (users.contains(user)) {
-            editUser(user?.copy(loggedIn = true))
+            editUser(user?.id , user?.copy(loggedIn = true))
             ResponseEntity(
                 BasicUserController.entityToDTO(
                     basicUser = basicUserRepository?.findAll()?.toList()?.first { it.username == user?.username }
@@ -91,7 +90,7 @@ class UserController {
     @PostMapping("/logout/{id}")
     fun logUserOut(@PathVariable id: Long): HttpStatus {
         val user = userRepository?.findById(id)?.get() ?: return HttpStatus.NOT_FOUND
-        editUser(user.copy(loggedIn = false))
+        editUser(user.id , user.copy(loggedIn = false))
         return HttpStatus.OK
     }
 
