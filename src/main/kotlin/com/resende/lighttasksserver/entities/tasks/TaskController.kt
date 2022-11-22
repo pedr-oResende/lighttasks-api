@@ -69,12 +69,12 @@ class TaskController {
             Task(
                 id = task.id,
                 responsible = responsible,
-                name = name,
-                deadline = deadline,
-                description = description,
-                is_done = is_done,
+                name = name ?: task.name,
+                deadline = deadline ?: task.deadline,
+                description = description ?: task.description,
+                is_done = is_done ?: task.is_done,
                 created_at = task.created_at,
-                team_id = team_id
+                team_id = team_id ?: task.team_id
             )
         }
         taskRepository?.save(editedTask)

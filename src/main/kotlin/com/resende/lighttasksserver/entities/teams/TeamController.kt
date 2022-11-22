@@ -76,8 +76,8 @@ class TeamController {
             return ResponseEntity(null, HttpStatus.NOT_FOUND)
         val editedTeam = with(newTeam) {
             team.copy(
-                name = name,
-                leader_id = leader_id
+                name = name ?: team.name,
+                leader_id = leader_id ?: team.leader_id
             )
         }
         teamRepository?.save(editedTeam)

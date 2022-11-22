@@ -3,9 +3,7 @@ package com.resende.lighttasksserver.entities.basic_user
 import com.resende.lighttasksserver.entities.basic_user.model.BasicUser
 import com.resende.lighttasksserver.entities.basic_user.model.BasicUserDTO
 import com.resende.lighttasksserver.entities.tasks.TaskController
-import com.resende.lighttasksserver.entities.teams.TeamController
 import com.resende.lighttasksserver.entities.teams.TeamRepository
-import com.resende.lighttasksserver.model.Status
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -43,7 +41,7 @@ class BasicUserController {
     fun editBasicUser(@RequestBody newUser: @Valid BasicUser?): ResponseEntity<BasicUserDTO?> {
         if (newUser?.id == null) return ResponseEntity(null, HttpStatus.NOT_FOUND)
         val user = basicUserRepository?.findById(newUser.id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
-        val editedUser = user.copy(username = newUser.username)
+        val editedUser = user.copy(username = newUser.username ?: user.username)
         basicUserRepository?.save(editedUser)
         return ResponseEntity(entityToDTO(editedUser), HttpStatus.OK)
     }

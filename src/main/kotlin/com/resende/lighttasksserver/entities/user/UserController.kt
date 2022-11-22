@@ -71,7 +71,7 @@ class UserController {
     }
 
     @PostMapping("/login")
-    fun loginUser(@RequestBody user: @Valid User?): ResponseEntity<BasicUserDTO>? {
+    fun login(@RequestBody user: @Valid User?): ResponseEntity<BasicUserDTO>? {
         val users = userRepository?.findAll() ?: emptyList()
         return if (users.contains(user)) {
             editUser(user?.id , user?.copy(loggedIn = true))
@@ -88,7 +88,7 @@ class UserController {
     }
 
     @PostMapping("/logout/{id}")
-    fun logUserOut(@PathVariable id: Long): HttpStatus {
+    fun logout(@PathVariable id: Long): HttpStatus {
         val user = userRepository?.findById(id)?.get() ?: return HttpStatus.NOT_FOUND
         editUser(user.id , user.copy(loggedIn = false))
         return HttpStatus.OK
