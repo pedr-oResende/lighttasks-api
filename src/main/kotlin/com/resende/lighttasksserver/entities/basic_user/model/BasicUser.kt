@@ -19,6 +19,9 @@ class BasicUser(
     @NotBlank
     val username: String?,
 
+    @NotBlank
+    val full_name: String?,
+
     @OneToMany(mappedBy = "responsible")
     val tasks: Set<Task>?,
 
@@ -32,6 +35,7 @@ class BasicUser(
         other as BasicUser
 
         return Objects.equals(username, other.username)
+                && Objects.equals(full_name, other.full_name)
                 && Objects.equals(tasks, other.tasks)
                 && Objects.equals(teams, other.teams)
     }
@@ -41,11 +45,13 @@ class BasicUser(
     fun copy(
         id: Long = this.id,
         username: String? = this.username,
+        full_name: String? = this.full_name,
         tasks: Set<Task>? = this.tasks,
         teams: Set<Team>? = this.teams
     ) = BasicUser(
         id = id,
         username = username,
+        full_name = full_name,
         tasks = tasks,
         teams = teams
     )

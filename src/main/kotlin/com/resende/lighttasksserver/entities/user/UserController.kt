@@ -42,6 +42,7 @@ class UserController {
             BasicUser(
                 id = newUser.id,
                 username = newUser.username,
+                full_name = newUser.full_name,
                 teams = setOf(),
                 tasks = setOf()
             )

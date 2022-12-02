@@ -17,6 +17,7 @@ class User(
     @GenericGenerator(name = "increment", strategy = "increment")
     val id: Long,
     @NotBlank val username: String?,
+    @NotBlank val full_name: String?,
     @NotBlank val password: String?,
     @NotBlank val logged_in: Boolean?
 ) {
@@ -33,16 +34,15 @@ class User(
     fun copy(
         id: Long = this.id,
         username: String? = this.username,
+        full_name: String? = this.full_name,
         password: String? = this.password,
         loggedIn: Boolean? = this.logged_in
     ) = User(
         id = id,
         username = username,
+        full_name = full_name,
         password = password,
         logged_in = loggedIn
     )
 
-    override fun toString(): String {
-        return this::class.simpleName + "(id = $id , username = $username , password = $password , loggedIn = $logged_in )"
-    }
 }
