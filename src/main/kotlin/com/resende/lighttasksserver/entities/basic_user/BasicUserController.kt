@@ -40,6 +40,8 @@ class BasicUserController {
     @PutMapping
     fun editBasicUser(@RequestBody newUser: @Valid BasicUser?): ResponseEntity<BasicUserDTO?> {
         if (newUser?.id == null) return ResponseEntity(null, HttpStatus.NOT_FOUND)
+        if (basicUserRepository?.findAll()?.toList()?.map { it.username }?.contains(newUser.username) == true)
+            return ResponseEntity(null, HttpStatus.ALREADY_REPORTED)
         val user = basicUserRepository?.findById(newUser.id)?.get() ?: return ResponseEntity(null, HttpStatus.NOT_FOUND)
         val editedUser = user.copy(username = newUser.username ?: user.username)
         basicUserRepository?.save(editedUser)
@@ -70,6 +72,7 @@ class BasicUserController {
                 BasicUserDTO(
                     id = id,
                     username = username,
+                    full_name = full_name,
                     tasks = tasks?.map { TaskController.entityToDTO(it) }?.toSet(),
                     teams_id = teams?.map { it.id }?.toSet()
                 )
