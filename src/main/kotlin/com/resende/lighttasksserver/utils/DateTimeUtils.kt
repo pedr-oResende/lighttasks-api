@@ -6,12 +6,12 @@ import java.time.format.DateTimeFormatter
 class DateTimeUtils {
     companion object {
         fun getDate(): String? {
-            val dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            val dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd")
             return dtf.format(LocalDateTime.now())
         }
 
         fun getDateTime(): String? {
-            val dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
+            val dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             return dtf.format(LocalDateTime.now())
         }
     }
